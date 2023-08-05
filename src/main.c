@@ -22,10 +22,10 @@ SDL_Window *window;
 SDL_Renderer *renderer;
 
 uint32_t colours[] = {
- /* white */ 0xacaea4,
- /* lgrey */ 0x7c7e74,
- /* dgrey */ 0x5c5e54,
- /* black */ 0x2c2e24
+    /* white */ 0xacaea4,
+    /* lgrey */ 0x7c7e74,
+    /* dgrey */ 0x5c5e54,
+    /* black */ 0x2c2e24
 };
 
 void check_event() {
@@ -33,29 +33,31 @@ void check_event() {
 
     while(SDL_PollEvent(&event)) {
         switch(event.type) {
-            case SDL_QUIT: {
-                exit(0);
+        case SDL_QUIT: {
+            exit(0);
+            break;
+        }
+        case SDL_KEYDOWN: {
+            switch(event.key.keysym.sym) {
+            case SDLK_LEFT: {
+                pw_button_callback(BUTTON_L);
                 break;
             }
-            case SDL_KEYDOWN: {
-                switch(event.key.keysym.sym) {
-                    case SDLK_LEFT: {
-                        pw_button_callback(BUTTON_L);
-                        break;
-                    }
-                    case SDLK_UP: {
-                        pw_button_callback(BUTTON_M);
-                        break;
-                    }
-                    case SDLK_RIGHT: {
-                        pw_button_callback(BUTTON_R);
-                        break;
-                    }
-                    default: break;
-                }
+            case SDLK_UP: {
+                pw_button_callback(BUTTON_M);
                 break;
             }
-            default: break;
+            case SDLK_RIGHT: {
+                pw_button_callback(BUTTON_R);
+                break;
+            }
+            default:
+                break;
+            }
+            break;
+        }
+        default:
+            break;
         }
     }
 }
@@ -69,7 +71,7 @@ void check_event() {
  * int pw_eeprom_read(eeprom_addr_t addr, uint8_t *buf, size_t sz)
  * int pw_eeprom_write(eeprom_addr_t addr, uint8_t *buf, size_t sz)
  * void pw_eeprom_set_area(eeprom_addr_t addr, uint8_t v, size_t sz)
- * 
+ *
  * ==== SCREEN
  * void pw_screen_init()
  * void pw_screen_draw_img(pw_img_t *img, screen_pos_t x, screen_pos_t y)
@@ -78,38 +80,42 @@ void check_event() {
  * void pw_screen_clear_area()
  * void pw_screen_draw_horiz_line()
  * void pw_screen_draw_text_box()
- * 
+ *
  * ==== FLASH
  * void pw_flash_read(pw_flash_img_t img_index, uint8_t *buf)
- * 
+ *
  * ==== BUTTONS - IRQ
  * void pw_button_init()
- * 
+ *
  * ==== IR
  * void pw_ir_init()
  * intpw_ir_read(uint8_t *buf, size_t len)
  * intpw_ir_write(uint8_t *buf, size_t len)
- * 
+ *
  * ==== TIMER
  * void pw_timer_delay_ms(uint64_t ms)
  * uint64_t pw_now_us()
- * 
+ *
  * ==== ACCEL
  * int8_t pw_accel_init()
  * uint32_t pw_accel_get_new_steps()
  */
 
-void pw_button_init(){}
-void pw_ir_init(){}
-int pw_ir_read(uint8_t *buf, size_t len){ return 0; }
-int pw_ir_write(uint8_t *buf, size_t len){ return 0; }
-uint64_t pw_now_us(){ 
+void pw_button_init() {}
+void pw_ir_init() {}
+int pw_ir_read(uint8_t *buf, size_t len) {
+    return 0;
+}
+int pw_ir_write(uint8_t *buf, size_t len) {
+    return 0;
+}
+uint64_t pw_now_us() {
     struct timespec ts;
     (void)timespec_get(&ts, TIME_UTC);
     uint64_t us = ts.tv_sec*1000000 + ts.tv_nsec/1000;
-    return us; 
+    return us;
 }
-void pw_ir_delay_ms(uint64_t ms){
+void pw_ir_delay_ms(uint64_t ms) {
 #ifdef WIN32
     Sleep(ms);
 #else
@@ -117,8 +123,10 @@ void pw_ir_delay_ms(uint64_t ms){
     (void)nanosleep(&ts, NULL);
 #endif
 }
-void pw_accel_init(){}
-uint32_t pw_accel_get_new_steps(){ return 0; }
+void pw_accel_init() {}
+uint32_t pw_accel_get_new_steps() {
+    return 0;
+}
 uint8_t *sad_pokewalker = 0;
 
 void walker_entry();
@@ -180,13 +188,13 @@ void pw_eeprom_set_area(eeprom_addr_t addr, uint8_t v, size_t len) {
 
 void pw_screen_init() {
     window = SDL_CreateWindow(
-        "picowalker-sdl",
-        SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED,
-        96*PW_SCALE,
-        64*PW_SCALE,
-        0
-    );
+                 "picowalker-sdl",
+                 SDL_WINDOWPOS_UNDEFINED,
+                 SDL_WINDOWPOS_UNDEFINED,
+                 96*PW_SCALE,
+                 64*PW_SCALE,
+                 0
+             );
     if(!window) {
         fprintf(stderr, "Failed to open window: %s\n", SDL_GetError());
     }
@@ -216,10 +224,8 @@ void pw_screen_clear_area(screen_pos_t x, screen_pos_t y, screen_pos_t width, sc
     pw_screen_fill_area(x, y, width, height, 0);
 }
 
-void pw_screen_draw_text_box(screen_pos_t x1, screen_pos_t y1, screen_pos_t x2, screen_pos_t y2, screen_colour_t colour) {
+void pw_screen_draw_text_box(screen_pos_t x1, screen_pos_t y1, screen_pos_t width, screen_pos_t height, screen_colour_t colour) {
     // draw rectangle, need to make it thicker but good start
-    int width = x2-x1;
-    int height = y2-y1;
     SDL_Rect box = {.x=x1, .y=y1, .w=width, .h=height };
     SDL_SetRenderDrawColor(renderer, 0x2c, 0x2e, 0x24, SDL_ALPHA_OPAQUE);
     SDL_RenderDrawRect(renderer, &box);
@@ -238,8 +244,8 @@ void pw_screen_draw_horiz_line(screen_pos_t x, screen_pos_t y, screen_pos_t len,
  * Adapted from pw_lcd repo
  */
 void decode_img(pw_img_t *pw_img, SDL_Texture **tex) {
-	uint8_t pixel_value, bit_plane_upper, bit_plane_lower;
-	size_t row, col;
+    uint8_t pixel_value, bit_plane_upper, bit_plane_lower;
+    size_t row, col;
 
     pw_img->size = pw_img->width * pw_img->height * 2/8; // 2 bytes = 8 pixels
 
@@ -258,25 +264,25 @@ void decode_img(pw_img_t *pw_img, SDL_Texture **tex) {
     uint8_t *sdl_buf = pixels; // this is the texture pixel buf
 
 
-	// i = number of bytes into pw_img
-	for(size_t i = 0; i < pw_img->size; i += 2) {
-		bit_plane_upper = pw_img->data[i];
-		bit_plane_lower = pw_img->data[i+1];
+    // i = number of bytes into pw_img
+    for(size_t i = 0; i < pw_img->size; i += 2) {
+        bit_plane_upper = pw_img->data[i];
+        bit_plane_lower = pw_img->data[i+1];
 
-		// j = index of pixel in chunk
-		for(size_t j = 0; j < 8; j++) {
-			// PW raw pixel value
-			pixel_value  = ((bit_plane_upper>>j) & 1) << 1;
-			pixel_value |= ((bit_plane_lower>>j) & 1);
+        // j = index of pixel in chunk
+        for(size_t j = 0; j < 8; j++) {
+            // PW raw pixel value
+            pixel_value  = ((bit_plane_upper>>j) & 1) << 1;
+            pixel_value |= ((bit_plane_lower>>j) & 1);
 
-			col = (i/2)%pw_img->width;
-			row = 8*(i/(2*pw_img->width)) + j;
+            col = (i/2)%pw_img->width;
+            row = 8*(i/(2*pw_img->width)) + j;
 
-			// Convert pw 2bpp to oled 4bpp via map
-			// assuming 1 byte per pixel
-			decode_buf[ (row*pw_img->width)+col ] = pixel_value;
-		}
-	}
+            // Convert pw 2bpp to oled 4bpp via map
+            // assuming 1 byte per pixel
+            decode_buf[ (row*pw_img->width)+col ] = pixel_value;
+        }
+    }
 
     for(size_t i = 0; i < pw_img->width*pw_img->height; i++) {
         uint32_t c = colours[decode_buf[i]]; // 2-bpp colour/index to RGB888 buffer
@@ -293,7 +299,7 @@ void decode_img(pw_img_t *pw_img, SDL_Texture **tex) {
 
 void pw_screen_draw_img(pw_img_t *img, screen_pos_t x, screen_pos_t y) {
     // separate convert function and then upscales it, converts it to SDL texture or something and draws it
-    
+
     SDL_Texture *tex = NULL;
     decode_img(img, &tex);
 
@@ -331,28 +337,28 @@ int main(int argc, char** argv) {
     ShowWindow(GetConsoleWindow(), SW_HIDE);
 #endif
 
-/*
-    pw_ir_init();
-    pw_button_init();
-    pw_screen_init();
-    pw_eeprom_init();
-    pw_accel_init();
+    /*
+        pw_ir_init();
+        pw_button_init();
+        pw_screen_init();
+        pw_eeprom_init();
+        pw_accel_init();
 
-    // set up frame
-    SDL_SetRenderDrawColor(renderer, 0xac, 0xae, 0xa4, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(renderer);
+        // set up frame
+        SDL_SetRenderDrawColor(renderer, 0xac, 0xae, 0xa4, SDL_ALPHA_OPAQUE);
+        SDL_RenderClear(renderer);
 
-    // draw frame
-    SDL_RenderPresent(renderer);
+        // draw frame
+        SDL_RenderPresent(renderer);
 
-    //SDL_Delay(3000);
+        //SDL_Delay(3000);
 
 
-    pw_screen_draw_horiz_line(0, 40, 96, 0);
-    pw_screen_draw_horiz_line(0, 41, 96, 1);
-    pw_screen_draw_text_box(0, 32, 96, 64, 0);
+        pw_screen_draw_horiz_line(0, 40, 96, 0);
+        pw_screen_draw_horiz_line(0, 41, 96, 1);
+        pw_screen_draw_text_box(0, 32, 96, 64, 0);
 
-*/
+    */
 
     walker_setup();
 
