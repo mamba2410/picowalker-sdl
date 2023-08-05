@@ -21,6 +21,8 @@
 SDL_Window *window;
 SDL_Renderer *renderer;
 
+uint32_t uncounted_steps = 0;
+
 uint32_t colours[] = {
     /* white */ 0xacaea4,
     /* lgrey */ 0x7c7e74,
@@ -49,6 +51,22 @@ void check_event() {
             }
             case SDLK_RIGHT: {
                 pw_button_callback(BUTTON_R);
+                break;
+            }
+            case SDLK_1: {
+                uncounted_steps += 1;
+                break;
+            }
+            case SDLK_2: {
+                uncounted_steps += 10;
+                break;
+            }
+            case SDLK_3: {
+                uncounted_steps += 100;
+                break;
+            }
+            case SDLK_4: {
+                uncounted_steps += 1000;
                 break;
             }
             default:
@@ -125,7 +143,9 @@ void pw_ir_delay_ms(uint64_t ms) {
 }
 void pw_accel_init() {}
 uint32_t pw_accel_get_new_steps() {
-    return 0;
+    uint32_t tmp = uncounted_steps;
+    uncounted_steps = 0;
+    return tmp;
 }
 uint8_t *sad_pokewalker = 0;
 
