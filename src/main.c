@@ -244,7 +244,7 @@ void pw_screen_fill_area(screen_pos_t x, screen_pos_t y, screen_pos_t width, scr
     SDL_Rect box = {.x=x, .y=y, .w=width, .h=height };
     SDL_SetRenderDrawColor(renderer, (colours[colour]>>16)&0xff, (colours[colour]>>8)&0xff, (colours[colour])&0xff, SDL_ALPHA_OPAQUE);
     SDL_RenderFillRect(renderer, &box);
-    SDL_RenderPresent(renderer);
+    //SDL_RenderPresent(renderer);
 }
 
 void pw_screen_clear_area(screen_pos_t x, screen_pos_t y, screen_pos_t width, screen_pos_t height) {
@@ -256,13 +256,13 @@ void pw_screen_draw_text_box(screen_pos_t x1, screen_pos_t y1, screen_pos_t widt
     SDL_Rect box = {.x=x1, .y=y1, .w=width, .h=height };
     SDL_SetRenderDrawColor(renderer, 0x2c, 0x2e, 0x24, SDL_ALPHA_OPAQUE);
     SDL_RenderDrawRect(renderer, &box);
-    SDL_RenderPresent(renderer);
+    //SDL_RenderPresent(renderer);
 }
 
 void pw_screen_draw_horiz_line(screen_pos_t x, screen_pos_t y, screen_pos_t len, screen_colour_t colour) {
     SDL_SetRenderDrawColor(renderer, (colours[colour]>>16)&0xff, (colours[colour]>>8)&0xff, (colours[colour])&0xff, SDL_ALPHA_OPAQUE);
     SDL_RenderDrawLine(renderer, x, y, (x+len), y);
-    SDL_RenderPresent(renderer);
+    //SDL_RenderPresent(renderer);
 }
 
 /*
@@ -499,6 +499,7 @@ int main(int argc, char** argv) {
     while(1) {
         walker_loop();
         check_event();
+        SDL_RenderPresent(renderer);
     }
 
     SDL_DestroyWindow(window);
