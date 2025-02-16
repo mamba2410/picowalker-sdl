@@ -495,19 +495,29 @@ void pw_flash_read(uint8_t *buf, size_t len) {
     fclose(f);
 }
 
+pw_battery_status_t pw_power_get_battery_status() { return (pw_battery_status_t){0}; }
+
+void pw_power_init() {
+    // Nothing to do
+}
+
 bool pw_power_should_sleep() {
+    // TODO: keep a timer and check that
     return false;
 }
 
-void pw_power_init() { }
+void pw_power_enter_sleep() {
+    // we don't sleep
+    // change this if we do
+}
 
-pw_battery_status_t pw_power_get_battery_status() { return (pw_battery_status_t){0}; }
+void pw_ir_wake() {
+    // TODO: we don't have IR, but if we did, we activate it here
+}
 
-void pw_power_enter_sleep() { }
-
-void pw_ir_sleep() { }
-
-void pw_ir_wake() { }
+void pw_ir_sleep() {
+    // TODO: this shouldn't be here
+}
 
 // ========================================================================================================
 
