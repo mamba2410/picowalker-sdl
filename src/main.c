@@ -134,12 +134,54 @@ int pw_ir_read(uint8_t *buf, size_t len) {
 int pw_ir_write(uint8_t *buf, size_t len) {
     return 0;
 }
-uint64_t pw_now_us() {
+//uint64_t pw_now_us() {
+//    struct timespec ts;
+//    (void)timespec_get(&ts, TIME_UTC);
+//    uint64_t us = ts.tv_sec*1000000 + ts.tv_nsec/1000;
+//    return us;
+//}
+
+uint32_t pw_time_get_us() {
     struct timespec ts;
     (void)timespec_get(&ts, TIME_UTC);
     uint64_t us = ts.tv_sec*1000000 + ts.tv_nsec/1000;
-    return us;
+    return (uint32_t)us;
 }
+
+uint32_t pw_time_get_ms() {
+    struct timespec ts;
+    (void)timespec_get(&ts, TIME_UTC);
+    uint64_t ms = ts.tv_sec*1000 + ts.tv_nsec/1000000;
+    return (uint32_t)ms;
+}
+
+void pw_rtc_set_time(uint32_t rtc) {
+    // pass
+}
+
+uint32_t pw_rtc_get_time() {
+    struct timespec ts;
+    (void)timespec_get(&ts, TIME_UTC);
+    // Turn unix seconds to 1st jan 2000 seconds
+    uint64_t seconds = ts.tv_sec - 946684800;
+    return (uint32_t)seconds;
+
+}
+
+static uint32_t prev_time = 0;
+pw_rtc_events_t pw_rtc_get_events() {
+    pw_rtc_events_t events = 0;
+
+    uint32_t time = pw_rtc_get_time();
+    if(time != prev_time) {
+        if(time%60 == 0) events |= RTC_EVENT_EVERY_MINUTE;
+        if(time%3600 == 0) events |= RTC_EVENT_EVERY_HOUR;
+        if(time%(24*3600) == 0) events |= RTC_EVENT_EVERY_DAY;
+    }
+    prev_time = time;
+    return events;
+}
+
 void pw_ir_delay_ms(uint64_t ms) {
 #ifdef WIN32
     Sleep(ms);
@@ -454,6 +496,20 @@ void pw_flash_read(uint8_t *buf, size_t len) {
     fread(buf, len, 1, f);
     fclose(f);
 }
+
+bool pw_power_should_sleep() {
+    return false;
+}
+
+void pw_power_init() { }
+
+pw_battery_status_t pw_power_get_battery_status() { return (pw_battery_status_t){0}; }
+
+void pw_power_enter_sleep() { }
+
+void pw_ir_sleep() { }
+
+void pw_ir_wake() { }
 
 // ========================================================================================================
 
