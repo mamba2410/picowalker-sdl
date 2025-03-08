@@ -134,12 +134,6 @@ int pw_ir_read(uint8_t *buf, size_t len) {
 int pw_ir_write(uint8_t *buf, size_t len) {
     return 0;
 }
-//uint64_t pw_now_us() {
-//    struct timespec ts;
-//    (void)timespec_get(&ts, TIME_UTC);
-//    uint64_t us = ts.tv_sec*1000000 + ts.tv_nsec/1000;
-//    return us;
-//}
 
 uint32_t pw_time_get_us() {
     struct timespec ts;
@@ -153,6 +147,19 @@ uint32_t pw_time_get_ms() {
     (void)timespec_get(&ts, TIME_UTC);
     uint64_t ms = ts.tv_sec*1000 + ts.tv_nsec/1000000;
     return (uint32_t)ms;
+}
+
+pw_dhms_t pw_rtc_get_dhms() {
+    struct timespec ts;
+    (void)timespec_get(&ts, TIME_UTC);
+    pw_dhms_t dhms = {0};
+    dhms.seconds = ts.tv_sec % 60;
+    ts.tv_sec /= 60;
+    dhms.minutes = ts.tv_sec % 60;
+    ts.tv_sec /= 60;
+    dhms.hours = ts.tv_sec % 24;
+    dhms.days = ts.tv_sec / 24;
+    return dhms;
 }
 
 void pw_rtc_set_time(uint32_t rtc) {

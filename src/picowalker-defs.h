@@ -258,6 +258,13 @@ bool pw_power_should_sleep();
 
 typedef uint8_t pw_rtc_events_t;
 
+typedef struct pw_dhms_s {
+    uint16_t days;
+    uint8_t hours;
+    uint8_t minutes;
+    uint8_t seconds;
+} pw_dhms_t;
+
 /*
  * Functions defined by the driver
  */
