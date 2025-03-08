@@ -181,15 +181,6 @@ pw_rtc_events_t pw_rtc_get_events() {
     prev_time = time;
     return events;
 }
-
-void pw_ir_delay_ms(uint64_t ms) {
-#ifdef WIN32
-    Sleep(ms);
-#else
-    struct timespec ts = {.tv_nsec=ms*1000000};
-    (void)nanosleep(&ts, NULL);
-#endif
-}
 void pw_accel_init() {}
 uint32_t pw_accel_get_new_steps() {
     uint32_t tmp = uncounted_steps;
