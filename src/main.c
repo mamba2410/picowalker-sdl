@@ -511,10 +511,14 @@ void pw_flash_read(uint8_t *buf, size_t len) {
     fclose(f);
 }
 
+static struct timespec last_power_meas;
+
 pw_battery_status_t pw_power_get_battery_status() { return (pw_battery_status_t){0}; }
 
 void pw_power_init() {
     // Nothing to do
+    timespec_get(&last_power_meas, TIME_UTC);
+    last_power_meas.tv_sec -= 60;
 }
 
 bool pw_power_should_sleep() {
@@ -545,11 +549,22 @@ void pw_battery_shutdown() {
 }
 
 void pw_power_start_measurement() { }
+
 pw_battery_status_t pw_power_get_status() {
+    struct timespec now;
+    timespec_get(&now, TIME_UTC);
+
     pw_battery_status_t bs = (pw_battery_status_t){
-        .percent = 100,
+        .percent = 0,
         .flags = 0
     };
+
+    if(now.tv_sec - last_power_meas.tv_sec > 60) {
+        bs.percent = 100;
+        bs.flags |= PW_BATTERY_STATUS_FLAGS_MEASUREMENT;
+        last_power_meas = now;
+    }
+
     return bs;
 }
 
