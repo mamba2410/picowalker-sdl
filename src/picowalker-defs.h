@@ -233,6 +233,8 @@ typedef struct pw_battery_status_s {
     uint8_t flags;
 } pw_battery_status_t;
 
+typedef uint8_t pw_wake_reason_t;
+
 /*
  *  Functions defined by driver
  */

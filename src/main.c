@@ -16,6 +16,11 @@
 #include <SDL2/SDL.h>
 
 #include "picowalker-defs.h"
+#include "picowalker-text.h"
+
+extern void pw_button_callback(uint8_t b);
+extern void walker_setup();
+extern void (*current_loop)();
 
 #define PW_SCALE 10
 
@@ -149,7 +154,7 @@ uint32_t pw_time_get_ms() {
     return (uint32_t)ms;
 }
 
-pw_dhms_t pw_rtc_get_dhms() {
+pw_dhms_t pw_time_get_dhms() {
     struct timespec ts;
     (void)timespec_get(&ts, TIME_UTC);
     pw_dhms_t dhms = {0};
@@ -162,11 +167,13 @@ pw_dhms_t pw_rtc_get_dhms() {
     return dhms;
 }
 
-void pw_rtc_set_time(uint32_t rtc) {
+void pw_time_init_rtc(uint32_t rtc) {
     // pass
 }
 
-uint32_t pw_rtc_get_time() {
+void pw_time_set_rtc(uint32_t rtc) { }
+
+uint32_t pw_time_get_rtc() {
     struct timespec ts;
     (void)timespec_get(&ts, TIME_UTC);
     // Turn unix seconds to 1st jan 2000 seconds
@@ -175,11 +182,15 @@ uint32_t pw_rtc_get_time() {
 
 }
 
+void pw_time_delay_ms(uint32_t ms) {
+    usleep(ms*1000);
+}
+
 static uint32_t prev_time = 0;
 pw_rtc_events_t pw_rtc_get_events() {
     pw_rtc_events_t events = 0;
 
-    uint32_t time = pw_rtc_get_time();
+    uint32_t time = pw_time_get_rtc();
     if(time != prev_time) {
         if(time%60 == 0) events |= RTC_EVENT_EVERY_MINUTE;
         if(time%3600 == 0) events |= RTC_EVENT_EVERY_HOUR;
@@ -305,6 +316,8 @@ void pw_screen_draw_horiz_line(screen_pos_t x, screen_pos_t y, screen_pos_t len,
     //SDL_RenderPresent(renderer);
 }
 
+void pw_screen_set_brightness(uint8_t level) { }
+
 /*
  * Convert 2bpp Pokewalker image format to 4bpp OLED format
  * Need on-the-fly decoding because game sends images
@@ -375,6 +388,9 @@ void pw_screen_draw_img(pw_img_t *img, screen_pos_t x, screen_pos_t y) {
     SDL_RenderPresent(renderer);
 }
 
+void pw_screen_sleep() { }
+void pw_screen_wake() { }
+
 #define AUDIO_SAMPLE_RATE 44100
 
 const SDL_AudioSpec desired_audio_spec = (const SDL_AudioSpec) {
@@ -402,7 +418,7 @@ void add_note(struct audio_buffer_t* audio_buffer, uint8_t period, uint16_t dura
     }
     audio_buffer->size = new_size;
 
-    int16_t* audio_it = (uint8_t*)audio_buffer->data + old_size;
+    int16_t* audio_it = (int16_t*)((uint8_t*)audio_buffer->data + old_size);
     for (size_t i = 0; i < dur_samples; i++) {
          audio_it[i] = pw_audio_volume * pw_audio_volume * (8191 * ((int)(i / period_samples) % 2) - 8191); // square wave, quadratic volume
     }
@@ -418,7 +434,7 @@ void add_silence(struct audio_buffer_t* audio_buffer, uint16_t samples) {
     }
     audio_buffer->size = new_size;
 
-    int16_t* audio_it = (uint8_t*)audio_buffer->data + old_size;
+    int16_t* audio_it = (int16_t*)((uint8_t*)audio_buffer->data + old_size);
     for (size_t i = 0; i < samples; i++) {
          audio_it[i] = 0;
     }
@@ -511,12 +527,30 @@ void pw_power_enter_sleep() {
     // change this if we do
 }
 
+pw_wake_reason_t pw_power_get_wake_reason() { return 0; }
+void pw_power_clear_wake_reason(pw_wake_reason_t wake_reason) { }
+
 void pw_ir_wake() {
     // TODO: we don't have IR, but if we did, we activate it here
 }
 
 void pw_ir_sleep() {
     // TODO: this shouldn't be here
+}
+
+void pw_battery_shutdown() {
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    exit(0);
+}
+
+void pw_power_start_measurement() { }
+pw_battery_status_t pw_power_get_status() {
+    pw_battery_status_t bs = (pw_battery_status_t){
+        .percent = 100,
+        .flags = 0
+    };
+    return bs;
 }
 
 // ========================================================================================================
@@ -561,9 +595,11 @@ int main(int argc, char** argv) {
     walker_setup();
 
     while(1) {
-        walker_loop();
+        //walker_loop();
+        current_loop();
         check_event();
         SDL_RenderPresent(renderer);
+        sleep(0);
     }
 
     SDL_DestroyWindow(window);
