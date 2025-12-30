@@ -15,9 +15,11 @@ if (DEFINED VCPKG_TARGET_TRIPLET) # windows
         $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
         ${CMAKE_SOURCE_DIR}/picowalker-core.lib
     )
+    target_compile_options(picowalker-sdl PRIVATE /W4)
     target_link_options(picowalker-sdl PRIVATE -mwindows)
 else() # linux
     include_directories(${SDL2_INCLUDE_DIRS})
+    target_compile_options(picowalker-sdl PRIVATE -Wall -Wextra -Wpedantic -std=c23)
     target_link_libraries(picowalker-sdl
         ${SDL2_LIBRARIES}
         ${CMAKE_SOURCE_DIR}/libpicowalker-core.a

@@ -1,4 +1,4 @@
-#include <stdio.h>
+#define _POSIX_C_SOURCE 199309L // Some stdlib funcs need this, like nanosleep
 #include <sys/stat.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -134,9 +134,13 @@ void check_event() {
 void pw_button_init() {}
 void pw_ir_init() {}
 int pw_ir_read(uint8_t *buf, size_t len) {
+    (void)buf;
+    (void)len;
     return 0;
 }
 int pw_ir_write(uint8_t *buf, size_t len) {
+    (void)buf;
+    (void)len;
     return 0;
 }
 
@@ -168,10 +172,11 @@ pw_dhms_t pw_time_get_dhms() {
 }
 
 void pw_time_init_rtc(uint32_t rtc) {
+    (void)rtc;
     // pass
 }
 
-void pw_time_set_rtc(uint32_t rtc) { }
+void pw_time_set_rtc(uint32_t rtc) { (void)rtc;}
 
 uint32_t pw_time_get_rtc() {
     struct timespec ts;
@@ -183,7 +188,8 @@ uint32_t pw_time_get_rtc() {
 }
 
 void pw_time_delay_ms(uint32_t ms) {
-    usleep(ms*1000);
+    struct timespec ts = {.tv_sec = 0, .tv_nsec = ms*1000000};
+    nanosleep(&ts, NULL);
 }
 
 static uint32_t prev_time = 0;
@@ -303,6 +309,7 @@ void pw_screen_clear_area(screen_pos_t x, screen_pos_t y, screen_pos_t width, sc
 }
 
 void pw_screen_draw_text_box(screen_pos_t x1, screen_pos_t y1, screen_pos_t width, screen_pos_t height, screen_colour_t colour) {
+    (void)colour;
     // draw rectangle, need to make it thicker but good start
     SDL_Rect box = {.x=x1, .y=y1, .w=width, .h=height };
     SDL_SetRenderDrawColor(renderer, 0x2c, 0x2e, 0x24, SDL_ALPHA_OPAQUE);
@@ -316,7 +323,7 @@ void pw_screen_draw_horiz_line(screen_pos_t x, screen_pos_t y, screen_pos_t len,
     //SDL_RenderPresent(renderer);
 }
 
-void pw_screen_set_brightness(uint8_t level) { }
+void pw_screen_set_brightness(uint8_t level) { (void)level; }
 
 /*
  * Convert 2bpp Pokewalker image format to 4bpp OLED format
@@ -393,7 +400,7 @@ void pw_screen_wake() { }
 
 #define AUDIO_SAMPLE_RATE 44100
 
-const SDL_AudioSpec desired_audio_spec = (const SDL_AudioSpec) {
+const SDL_AudioSpec desired_audio_spec = {
     .freq = AUDIO_SAMPLE_RATE,
     .format = AUDIO_S16SYS,
     .channels = 1,
@@ -454,7 +461,7 @@ void pw_audio_play_sound_data(const pw_sound_frame_t* sound_data, size_t sz) {
     audio_buffer.size = 0;
 
     uint8_t SH;
-    for (pw_sound_frame_t* sound_frame = sound_data; sound_frame < sound_data + sz; sound_frame++) {
+    for (const pw_sound_frame_t* sound_frame = sound_data; sound_frame < sound_data + sz; sound_frame++) {
         uint8_t info = sound_frame->info;
         uint8_t idx = sound_frame->period_idx;
 
@@ -532,7 +539,9 @@ void pw_power_enter_sleep() {
 }
 
 pw_wake_reason_t pw_power_get_wake_reason() { return 0; }
-void pw_power_clear_wake_reason(pw_wake_reason_t wake_reason) { }
+void pw_power_clear_wake_reason(pw_wake_reason_t wake_reason) {
+    (void)wake_reason;
+}
 
 void pw_ir_wake() {
     // TODO: we don't have IR, but if we did, we activate it here
@@ -572,6 +581,8 @@ pw_battery_status_t pw_power_get_status() {
 
 int main(int argc, char** argv) {
 
+    (void)argc;
+    (void)argv;
 
     SDL_SetMainReady();
     if( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0 ) {
