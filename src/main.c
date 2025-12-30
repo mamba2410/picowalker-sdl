@@ -15,12 +15,9 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 
-#include "picowalker-defs.h"
+#include "picowalker_structures.h"
+#include "picowalker_core.h"
 #include "picowalker-text.h"
-
-extern void pw_button_callback(uint8_t b);
-extern void walker_setup();
-extern void (*current_loop)();
 
 #define PW_SCALE 10
 
@@ -50,15 +47,15 @@ void check_event() {
         case SDL_KEYDOWN: {
             switch(event.key.keysym.sym) {
             case SDLK_LEFT: {
-                pw_button_callback(BUTTON_L);
+                pw_button_callback(PW_BUTTON_L);
                 break;
             }
             case SDLK_UP: {
-                pw_button_callback(BUTTON_M);
+                pw_button_callback(PW_BUTTON_M);
                 break;
             }
             case SDLK_RIGHT: {
-                pw_button_callback(BUTTON_R);
+                pw_button_callback(PW_BUTTON_R);
                 break;
             }
             case SDLK_1: {
@@ -94,13 +91,13 @@ void check_event() {
  *
  * ==== EEPROM
  * void pw_eeprom_init()
- * int pw_eeprom_read(eeprom_addr_t addr, uint8_t *buf, size_t sz)
- * int pw_eeprom_write(eeprom_addr_t addr, uint8_t *buf, size_t sz)
- * void pw_eeprom_set_area(eeprom_addr_t addr, uint8_t v, size_t sz)
+ * int pw_eeprom_read(pw_eeprom_addr_t addr, uint8_t *buf, size_t sz)
+ * int pw_eeprom_write(pw_eeprom_addr_t addr, uint8_t *buf, size_t sz)
+ * void pw_eeprom_set_area(pw_eeprom_addr_t addr, uint8_t v, size_t sz)
  *
  * ==== SCREEN
  * void pw_screen_init()
- * void pw_screen_draw_img(pw_img_t *img, screen_pos_t x, screen_pos_t y)
+ * void pw_screen_draw_img(pw_img_t *img, pw_screen_pos_t x, pw_screen_pos_t y)
  * void pw_screen_clear()
  * void pw_screen_fill_area()
  * void pw_screen_clear_area()
@@ -250,13 +247,13 @@ void pw_eeprom_init() {
 }
 
 
-int pw_eeprom_read(eeprom_addr_t addr, uint8_t *buf, size_t len) {
+int pw_eeprom_read(pw_eeprom_addr_t addr, uint8_t *buf, size_t len) {
     void *ret = memcpy(buf, &eeprom[addr], len);
     if(!ret) return -1;
     else return 0;
 }
 
-int pw_eeprom_write(eeprom_addr_t addr, uint8_t *buf, size_t len) {
+int pw_eeprom_write(pw_eeprom_addr_t addr, uint8_t *buf, size_t len) {
     void *ret = memcpy(&eeprom[addr], buf, len);
     FILE *f = fopen("eeprom.bin", "wb");
     fwrite(eeprom, 64*1024, 1, f);
@@ -265,7 +262,7 @@ int pw_eeprom_write(eeprom_addr_t addr, uint8_t *buf, size_t len) {
     else return 0;
 }
 
-void pw_eeprom_set_area(eeprom_addr_t addr, uint8_t v, size_t len) {
+void pw_eeprom_set_area(pw_eeprom_addr_t addr, uint8_t v, size_t len) {
     memset(&eeprom[addr], v, len);
 }
 
@@ -296,7 +293,7 @@ void pw_screen_clear() {
     SDL_RenderClear(renderer);
 }
 
-void pw_screen_fill_area(screen_pos_t x, screen_pos_t y, screen_pos_t width, screen_pos_t height, screen_colour_t colour) {
+void pw_screen_fill_area(pw_screen_pos_t x, pw_screen_pos_t y, pw_screen_pos_t width, pw_screen_pos_t height, pw_screen_color_t colour) {
     // idk draw a filled rectangle or something.
     SDL_Rect box = {.x=x, .y=y, .w=width, .h=height };
     SDL_SetRenderDrawColor(renderer, (colours[colour]>>16)&0xff, (colours[colour]>>8)&0xff, (colours[colour])&0xff, SDL_ALPHA_OPAQUE);
@@ -304,11 +301,11 @@ void pw_screen_fill_area(screen_pos_t x, screen_pos_t y, screen_pos_t width, scr
     //SDL_RenderPresent(renderer);
 }
 
-void pw_screen_clear_area(screen_pos_t x, screen_pos_t y, screen_pos_t width, screen_pos_t height) {
+void pw_screen_clear_area(pw_screen_pos_t x, pw_screen_pos_t y, pw_screen_pos_t width, pw_screen_pos_t height) {
     pw_screen_fill_area(x, y, width, height, 0);
 }
 
-void pw_screen_draw_text_box(screen_pos_t x1, screen_pos_t y1, screen_pos_t width, screen_pos_t height, screen_colour_t colour) {
+void pw_screen_draw_text_box(pw_screen_pos_t x1, pw_screen_pos_t y1, pw_screen_pos_t width, pw_screen_pos_t height, pw_screen_color_t colour) {
     (void)colour;
     // draw rectangle, need to make it thicker but good start
     SDL_Rect box = {.x=x1, .y=y1, .w=width, .h=height };
@@ -317,7 +314,7 @@ void pw_screen_draw_text_box(screen_pos_t x1, screen_pos_t y1, screen_pos_t widt
     //SDL_RenderPresent(renderer);
 }
 
-void pw_screen_draw_horiz_line(screen_pos_t x, screen_pos_t y, screen_pos_t len, screen_colour_t colour) {
+void pw_screen_draw_horiz_line(pw_screen_pos_t x, pw_screen_pos_t y, pw_screen_pos_t len, pw_screen_color_t colour) {
     SDL_SetRenderDrawColor(renderer, (colours[colour]>>16)&0xff, (colours[colour]>>8)&0xff, (colours[colour])&0xff, SDL_ALPHA_OPAQUE);
     SDL_RenderDrawLine(renderer, x, y, (x+len), y);
     //SDL_RenderPresent(renderer);
@@ -384,7 +381,7 @@ void decode_img(pw_img_t *pw_img, SDL_Texture **tex) {
 }
 
 
-void pw_screen_draw_img(pw_img_t *img, screen_pos_t x, screen_pos_t y) {
+void pw_screen_draw_img(pw_img_t *img, pw_screen_pos_t x, pw_screen_pos_t y) {
     // separate convert function and then upscales it, converts it to SDL texture or something and draws it
 
     SDL_Texture *tex = NULL;
@@ -425,9 +422,10 @@ void add_note(struct audio_buffer_t* audio_buffer, uint8_t period, uint16_t dura
     }
     audio_buffer->size = new_size;
 
+    pw_volume_t volume = pw_audio_get_volume();
     int16_t* audio_it = (int16_t*)((uint8_t*)audio_buffer->data + old_size);
     for (size_t i = 0; i < dur_samples; i++) {
-         audio_it[i] = pw_audio_volume * pw_audio_volume * (8191 * ((int)(i / period_samples) % 2) - 8191); // square wave, quadratic volume
+         audio_it[i] = volume * volume * (8191 * ((int)(i / period_samples) % 2) - 8191); // square wave, quadratic volume
     }
 }
 
@@ -454,7 +452,8 @@ void pw_audio_init() {
 }
 
 void pw_audio_play_sound_data(const pw_sound_frame_t* sound_data, size_t sz) {
-    if (pw_audio_volume == VOLUME_NONE) return;
+    pw_volume_t volume = pw_audio_get_volume();
+    if (volume == VOLUME_NONE) return;
 
     SDL_PauseAudioDevice(audio_dev, 0);
     struct audio_buffer_t audio_buffer;
@@ -520,7 +519,7 @@ void pw_flash_read(uint8_t *buf, size_t len) {
 
 static struct timespec last_power_meas;
 
-pw_battery_status_t pw_power_get_battery_status() { return (pw_battery_status_t){0}; }
+pw_power_status_t pw_power_get_battery_status() { return (pw_power_status_t){0}; }
 
 void pw_power_init() {
     // Nothing to do
@@ -559,18 +558,18 @@ void pw_battery_shutdown() {
 
 void pw_power_start_measurement() { }
 
-pw_battery_status_t pw_power_get_status() {
+pw_power_status_t pw_power_get_status() {
     struct timespec now;
     timespec_get(&now, TIME_UTC);
 
-    pw_battery_status_t bs = (pw_battery_status_t){
+    pw_power_status_t bs = (pw_power_status_t){
         .percent = 0,
         .flags = 0
     };
 
     if(now.tv_sec - last_power_meas.tv_sec > 60) {
         bs.percent = 100;
-        bs.flags |= PW_BATTERY_STATUS_FLAGS_MEASUREMENT;
+        bs.flags |= PW_POWER_STATUS_FLAGS_MEASUREMENT;
         last_power_meas = now;
     }
 
@@ -618,11 +617,11 @@ int main(int argc, char** argv) {
 
     */
 
-    walker_setup();
+    pw_setup();
 
     while(1) {
         //walker_loop();
-        current_loop();
+        pw_current_loop();
         check_event();
         SDL_RenderPresent(renderer);
         sleep(0);
@@ -633,3 +632,4 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+
